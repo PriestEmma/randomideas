@@ -1,31 +1,28 @@
+const path = require('path');
 const express = require('express');
-const port = 5000;
+const cors = require('cors');
+require('dotenv').config();
+const port = process.env.PORT || 5000;
+const connectDB = require('./config/db');
+
+connectDB();
 
 const app = express();
 
-const ideas = [
-  {
-    id: 1,
-    name: 'Batman',
-    text: 'Positive Newsletter, a newsletter is cool',
-    tag: 'Inventions',
-    username: 'BruceWayne',
-  },
-  {
-    id: 2,
-    name: 'Spiderman',
-    text: 'Milk cartons that turn a different color the older that your milk is getting',
-    tag: 'Software',
-    username: 'TomHalland',
-  },
-  {
-    id: 3,
-    name: 'IronMan',
-    text: 'Text is what is being used ',
-    tag: 'Technology',
-    username: 'TonyStart',
-  },
-];
+// Static Folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// cors middleware
+app.use(
+  cors({
+    origin: ['http://localhost:5000', 'http://localhost:3000'],
+    credentials: true,
+  }),
+);
 
 app.get('/', (req, res) => {
   res.send({
@@ -33,26 +30,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/api/ideas', (req, res) => {
-  res.json({
-    success: true,
-    data: ideas,
-  });
-});
-
-app.get('/api/ideas/:id', (req, res) => {
-  const idea = ideas.find((idea) => idea.id === +req.params.id);
-
-  if (!idea) {
-    return res
-      .status(404)
-      .json({ success: false, error: 'Resource not found' });
-  }
-
-  res.json({
-    success: true,
-    data: idea,
-  });
-});
+const ideasRouter = require('./routes/ideas');
+app.use('/api/ideas', ideasRouter);
 
 app.listen(port, () => console.log(`Server is running on port ${port}`));
